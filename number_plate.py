@@ -20,7 +20,7 @@ ffmpeg_command = [
     "-hls_time", "0.5",
     "-hls_list_size", "1",
     "-vcodec", "copy",
-    "-y", "./server/videos/ipcam/index.m3u8"
+    "-y", "./index.m3u8"
 ]
 
 # Function to run the FFmpeg command
