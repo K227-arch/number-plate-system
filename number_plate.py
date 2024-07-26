@@ -2,7 +2,36 @@ import cv2
 
 haarcascades = "model\haarcascade_russian_plate_number.xml"
 
-cap = cv2.VideoCapture(0)
+# RTSP URL
+rtsp_url = 'rtsp://admin:Admin123@172.168.9.8:554/Streaming/Channels/1'
+
+# Create a VideoCapture object
+cap = cv2.VideoCapture(rtsp_url)
+
+# # Check if the stream is opened successfully
+# if not cap.isOpened():
+#     print("Error: Cannot open the RTSP stream")
+#     exit()
+
+# # Read and display the frames from the stream
+# while True:
+#     ret, frame = cap.read()
+#     if not ret:
+#         print("Failed to grab frame")
+#         break
+
+#     # Display the frame
+#     cv2.imshow('RTSP Stream', frame)
+
+#     # Press 'q' to exit the loop
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+
+# # Release the capture and close the window
+# cap.release()
+# cv2.destroyAllWindows()
+
+# cap = cv2.VideoCapture(0)
 
 cap.set(3, 640)
 cap.set(4, 480)
