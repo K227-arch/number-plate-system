@@ -1,41 +1,55 @@
 import cv2
 import subprocess
 import numpy as np
+import threading
 
 # Path to the Haar Cascade XML file
 haarcascades = "model/haarcascade_russian_plate_number.xml"
 
-# RTSP URL
-rtsp_url = 'rtsp://admin:Admin123@172.168.9.8:554/Streaming/Channels/1'
+# IP address
+ip_address = "172.168.9.8"
+rtsp_url = f"rtsp://admin:Admin123@{ip_address}:554/Streaming/Channels/1"
 
-# FFmpeg command to capture frames from RTSP stream
+# FFmpeg command to stream video
 ffmpeg_command = [
-    'ffmpeg',
-    '-i', rtsp_url,
-    '-f', 'image2pipe',
-    '-pix_fmt', 'bgr24',
-    '-vcodec', 'rawvideo', '-'
+    "ffmpeg",
+    "-i", rtsp_url,
+    "-fflags", "flush_packets",
+    "-max_delay", "0.01",
+    "-flags", "-global_header",
+    "-hls_time", "0.5",
+    "-hls_list_size", "1",
+    "-vcodec", "copy",
+    "-y", "./server/videos/ipcam/index.m3u8"
 ]
+
+# Function to run the FFmpeg command
+def run_ffmpeg():
+    try:
+        process = subprocess.run(ffmpeg_command, capture_output=True, text=True, check=True)
+        print("FFmpeg command executed successfully")
+        print(process.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing FFmpeg command: {e}")
+        print(f"Output: {e.output}")
+
+# Start the FFmpeg command in a separate thread
+ffmpeg_thread = threading.Thread(target=run_ffmpeg)
+ffmpeg_thread.start()
 
 # Minimum area of the detected plate to be considered valid
 min_area = 500
 count = 0
 
-# Open a subprocess to run the FFmpeg command
-process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, bufsize=10**8)
-
-# Load the Haar Cascade classifier for detecting license plates
+# OpenCV processing part
 plate_cascade = cv2.CascadeClassifier(haarcascades)
+cap = cv2.VideoCapture(rtsp_url)
 
 while True:
-    # Read the next frame from the FFmpeg process
-    raw_image = process.stdout.read(640 * 480 * 3)  # Width * Height * 3 (for RGB)
-    if len(raw_image) == 0:
+    success, image = cap.read()
+    if not success:
         break
-    
-    # Convert the raw bytes to a numpy array
-    image = np.frombuffer(raw_image, dtype=np.uint8).reshape((480, 640, 3))
-    
+
     # Convert the frame to grayscale
     img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
@@ -69,9 +83,9 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Close the FFmpeg process
-process.stdout.close()
-process.wait()
-
-# Release resources and close OpenCV windows
+# Close OpenCV windows and release resources
+cap.release()
 cv2.destroyAllWindows()
+
+# Wait for the FFmpeg thread to finish
+ffmpeg_thread.join()
