@@ -33,8 +33,8 @@ cap = cv2.VideoCapture(rtsp_url)
 
 # cap = cv2.VideoCapture(0)
 
-cap.set(3, 640)
-cap.set(4, 480)
+# cap.set(3, 640)
+# cap.set(4, 480)
 
 min_area=500
 count=0
